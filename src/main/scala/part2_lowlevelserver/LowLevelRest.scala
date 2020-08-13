@@ -142,6 +142,7 @@ object LowLevelRest extends App with GuitarStoreJsonProtocol {
 
   val requestHandler: HttpRequest => Future[HttpResponse] = {
     case HttpRequest(HttpMethods.POST, uri@Uri.Path("/api/guitar/inventory"), _, _, _) =>
+      println("POST /api/guitar/inventory")
       val query = uri.query()
       val guitarId: Option[Int] = query.get("id").map(_.toInt)
       val guitarQuantity: Option[Int] = query.get("quantity").map(_.toInt)
@@ -157,6 +158,8 @@ object LowLevelRest extends App with GuitarStoreJsonProtocol {
       validGuitarResponseFuture.getOrElse(Future(HttpResponse(StatusCodes.BadRequest)))
 
     case HttpRequest(HttpMethods.GET, uri@Uri.Path("/api/guitar/inventory"), _, _, _) =>
+      println("GET /api/guitar/inventory")
+
       val query = uri.query()
       val inStockOption = query.get("inStock").map(_.toBoolean)
 
@@ -178,6 +181,8 @@ object LowLevelRest extends App with GuitarStoreJsonProtocol {
       /*
         query parameter handling code
        */
+      println("GET /api/guitar")
+
       val query = uri.query() // query object <=> Map[String, String]
       if (query.isEmpty) {
         val guitarsFuture: Future[List[Guitar]] = (guitarDb ? FindAllGuitars).mapTo[List[Guitar]]
@@ -197,6 +202,8 @@ object LowLevelRest extends App with GuitarStoreJsonProtocol {
 
     case HttpRequest(HttpMethods.POST, Uri.Path("/api/guitar"), _, entity, _) =>
       // entities are a Source[ByteString]
+      println("POST /api/guitar")
+      println(entity)
       val strictEntityFuture = entity.toStrict(3 seconds)
       strictEntityFuture.flatMap { strictEntity =>
 
@@ -216,7 +223,7 @@ object LowLevelRest extends App with GuitarStoreJsonProtocol {
       }
   }
 
-  Http().bindAndHandleAsync(requestHandler, "localhost", 8080)
+  Http().bindAndHandleAsync(requestHandler, "localhost", 8081)
 
   /**
     * Exercise: enhance the Guitar case class with a quantity field, by default 0
